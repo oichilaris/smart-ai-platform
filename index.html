@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMART AI — Literasi Digital & Pengembangan Karir Mahasiswa</title>
+<style>
+  :root { --bg:#0a0e27; --card:#141937; --card2:#1a2045; --accent:#00d4ff; --accent2:#a855f7; --text:#e2e8f0; --muted:#94a3b8; --border:#2a3158; --green:#22c55e; --orange:#f97316; --red:#ef4444; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+  .page { display:none; } .page.active { display:block; }
+  .sidebar { position:fixed; left:0; top:0; width:64px; height:100vh; background:var(--card); border-right:1px solid var(--border); display:flex; flex-direction:column; align-items:center; padding:16px 0; gap:8px; z-index:10; }
+  .sidebar .logo { width:40px; height:40px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; color:#fff; margin-bottom:8px; cursor:pointer; }
+  .sidebar .nav-item { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--muted); transition:all 0.2s; font-size:18px; position:relative; }
+  .sidebar .nav-item:hover, .sidebar .nav-item.active { background:var(--card2); color:var(--accent); }
+  .sidebar .nav-item .tooltip { position:absolute; left:50px; background:var(--card2); padding:4px 8px; border-radius:4px; font-size:11px; white-space:nowrap; opacity:0; pointer-events:none; transition:opacity 0.2s; }
+  .sidebar .nav-item:hover .tooltip { opacity:1; }
+  .main { margin-left:64px; padding:24px; min-height:100vh; }
+  .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+  .header h1 { font-size:24px; font-weight:700; background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .header .user { display:flex; align-items:center; gap:12px; }
+  .header .user .avatar { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,var(--accent2),var(--orange)); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:14px; }
+  .header .user .info { text-align:right; } .header .user .info .name { font-weight:600; font-size:14px; } .header .user .info .role { font-size:12px; color:var(--muted); }
+  .search-bar { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:10px 16px; width:320px; color:var(--text); font-size:14px; }
+  .grid { display:grid; grid-template-columns:1fr 1.2fr 1fr; gap:20px; }
+  .card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:20px; }
+  .card h3 { font-size:14px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:16px; }
+  .progress-item { margin-bottom:12px; } .progress-item .label { display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px; }
+  .progress-bar { height:8px; background:var(--card2); border-radius:4px; overflow:hidden; } .progress-bar .fill { height:100%; border-radius:4px; transition:width 0.5s; }
+  .fill.green { background:var(--green); } .fill.purple { background:var(--accent2); } .fill.blue { background:var(--accent); } .fill.grey { background:var(--muted); }
+  .tool-card { background:var(--card2); border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; }
+  .tool-card .info h4 { font-size:14px; font-weight:600; } .tool-card .info p { font-size:12px; color:var(--muted); margin-top:2px; }
+  .tool-card .btn { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; border:none; padding:6px 14px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; }
+  .token-card { background:linear-gradient(135deg,#1e2a5e,#2d1b4e); border:1px solid var(--border); border-radius:14px; padding:20px; }
+  .token-card .balance { font-size:32px; font-weight:700; color:var(--accent); } .token-card .label { font-size:12px; color:var(--muted); }
+  .activity { display:flex; justify-content:space-between; font-size:13px; padding:8px 0; border-bottom:1px solid var(--border); } .activity:last-child { border:none; } .activity .pos { color:var(--green); } .activity .neg { color:var(--orange); }
+  .job-item { padding:10px; background:var(--card2); border-radius:8px; margin-bottom:8px; } .job-item .title { font-size:13px; font-weight:600; } .job-item .company { font-size:12px; color:var(--muted); } .job-item .btn { font-size:11px; color:var(--accent); cursor:pointer; margin-top:4px; display:inline-block; }
+  .chart-container { height:120px; display:flex; align-items:flex-end; gap:4px; padding:8px 0; } .chart-bar { flex:1; background:var(--accent2); border-radius:4px 4px 0 0; min-height:4px; transition:height 0.3s; } .chart-bar.green { background:var(--green); }
+  .donut { width:100px; height:100px; border-radius:50%; background:conic-gradient(var(--accent) 0% 45%, var(--green) 45% 80%, var(--accent2) 80% 95%, var(--orange) 95% 100%); margin:0 auto; }
+  .legend { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; font-size:11px; } .legend-item { display:flex; align-items:center; gap:4px; } .legend-dot { width:8px; height:8px; border-radius:50%; }
+  .update-item { padding:8px; background:var(--card2); border-radius:6px; margin-bottom:6px; font-size:12px; } .update-item .badge { background:var(--accent); color:#000; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:600; margin-right:6px; }
+  .welcome { margin-bottom:20px; } .welcome h2 { font-size:18px; font-weight:600; } .welcome p { font-size:13px; color:var(--muted); margin-top:4px; }
+  .section-title { font-size:16px; font-weight:600; margin-bottom:16px; } .two-col { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+  .login-container { display:flex; justify-content:center; align-items:center; min-height:100vh; background:linear-gradient(135deg,#0a0e27,#1a1040); }
+  .login-box { background:var(--card); border:1px solid var(--border); border-radius:20px; padding:40px; width:400px; text-align:center; }
+  .login-box h2 { font-size:24px; margin-bottom:8px; background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .login-box p { color:var(--muted); font-size:14px; margin-bottom:24px; }
+  .login-box input { width:100%; padding:12px 16px; background:var(--card2); border:1px solid var(--border); border-radius:10px; color:var(--text); font-size:14px; margin-bottom:12px; }
+  .login-box button { width:100%; padding:12px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; margin-top:8px; }
+  .login-box .divider { margin:16px 0; color:var(--muted); font-size:12px; } .login-box .sso-btn { background:var(--card2); border:1px solid var(--border); color:var(--text); margin-bottom:8px; }
+  .back-btn { background:var(--card2); border:1px solid var(--border); color:var(--text); padding:8px 16px; border-radius:8px; cursor:pointer; font-size:13px; margin-bottom:16px; display:inline-block; } .back-btn:hover { background:var(--card); }
+  .data-table { width:100%; border-collapse:collapse; margin-top:12px; } .data-table th, .data-table td { padding:10px; text-align:left; border-bottom:1px solid var(--border); font-size:13px; } .data-table th { color:var(--muted); font-weight:600; }
+  .course-card { background:var(--card2); border:1px solid var(--border); border-radius:10px; padding:16px; margin-bottom:12px; } .course-card h4 { font-size:14px; font-weight:600; margin-bottom:4px; } .course-card p { font-size:12px; color:var(--muted); } .course-card .status { font-size:11px; padding:2px 8px; border-radius:4px; margin-top:8px; display:inline-block; }
+  .status.done { background:rgba(34,197,94,0.2); color:var(--green); } .status.progress { background:rgba(0,212,255,0.2); color:var(--accent); } .status.notstarted { background:rgba(148,163,184,0.2); color:var(--muted); }
+  @media (max-width:1024px) { .grid { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login" class="page active">
+  <div class="login-container">
+    <div class="login-box">
+      <h2>SMART AI</h2>
+      <p>Literasi Digital & Pengembangan Karir Mahasiswa</p>
+      <input type="text" id="loginUser" placeholder="Email / Username" />
+      <input type="password" id="loginPass" placeholder="Password" />
+      <button onclick="doLogin()">Login</button>
+      <div id="loginMsg" style="margin-top:8px;font-size:12px;text-align:center;"></div>
+      <div class="divider">— atau login dengan —</div>
+      <button class="sso-btn" onclick="doGoogleLogin()">🔵 Login dengan Google</button>
+      <button class="sso-btn" onclick="doCampusLogin()">🏛️ Login dengan Akun Kampus (SSO)</button>
+      <p style="margin-top:16px;font-size:12px;color:var(--muted);">Belum punya akun? <a href="#" onclick="showPage('register')" style="color:var(--accent);">Daftar di sini</a></p>
+      <p style="margin-top:16px;font-size:12px;color:var(--muted);">Belum punya akun? <a href="#" style="color:var(--accent);">Daftar di sini</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- HOME -->
+<div id="home" class="page">
+  <div class="sidebar">
+    <div class="logo" onclick="showPage('login')">SA</div>
+    <div class="nav-item active" onclick="showPage('home')">🏠<span class="tooltip">Home</span></div>
+    <div class="nav-item" onclick="showPage('courses')">📚<span class="tooltip">Courses</span></div>
+    <div class="nav-item" onclick="showPage('community')">👥<span class="tooltip">Community</span></div>
+    <div class="nav-item" onclick="showPage('schedule')">📅<span class="tooltip">Schedule</span></div>
+    <div class="nav-item" onclick="showPage('messages')">💬<span class="tooltip">Messages</span></div>
+    <div class="nav-item" onclick="showPage('tools')">🔧<span class="tooltip">Tools</span></div>
+    <div class="nav-item" onclick="showPage('data')">📊<span class="tooltip">Data</span></div>
+    <div class="nav-item" onclick="showPage('settings')">⚙️<span class="tooltip">Settings</span></div>
+    <div class="nav-item" onclick="showPage('login')">🚪<span class="tooltip">Logout</span></div>
+  </div>
+  <div class="main">
+    <div class="header"><div><h1>LITERACY AI</h1><input class="search-bar" placeholder="Search courses, tools, jobs..." /></div><div class="user"><div class="info"><div class="name">Sarah J.</div><div class="role">Student</div></div><div class="avatar">SJ</div></div></div>
+    <div class="welcome"><h2>MY AI LITERACY & CAREER HUB</h2><p>Welcome back, Sarah! Let's elevate your skills and career with AI.</p></div>
+    <div class="grid">
+      <div>
+        <div class="card"><h3>My Learning Journey</h3>
+          <div class="progress-item"><div class="label"><span>Fundamentals of AI</span><span>65%</span></div><div class="progress-bar"><div class="fill green" style="width:65%"></div></div></div>
+          <div class="progress-item"><div class="label"><span>Ethics in AI</span><span>30%</span></div><div class="progress-bar"><div class="fill purple" style="width:30%"></div></div></div>
+          <div class="progress-item"><div class="label"><span>AI for Research</span><span>Not started</span></div><div class="progress-bar"><div class="fill grey" style="width:0%"></div></div></div>
+          <div style="margin-top:16px;"><div style="font-size:13px;font-weight:600;margin-bottom:8px;">Career Pathways</div>
+          <div class="progress-item"><div class="label"><span>AI Product Manager</span><span>20%</span></div><div class="progress-bar"><div class="fill blue" style="width:20%"></div></div></div></div>
+        </div>
+        <div class="card" style="margin-top:20px;"><h3>AI Tool Workspace</h3>
+          <div class="tool-card"><div class="info"><h4>Prompt Studio</h4><p>For prompt engineering</p></div><button class="btn">LAUNCH</button></div>
+          <div class="tool-card"><div class="info"><h4>Research Assistant</h4><p>For academic research</p></div><button class="btn">LAUNCH</button></div>
+          <div class="tool-card"><div class="info"><h4>Resume Optimizer</h4><p>For resume improvement</p></div><button class="btn">LAUNCH</button></div>
+          <div class="tool-card"><div class="info"><h4>Interview Prep AI</h4><p>For interview practice</p></div><button class="btn">LAUNCH</button></div>
+        </div>
+      </div>
+      <div>
+        <div class="card"><h3>AI Insights & Analytics</h3>
+          <div style="margin-bottom:12px;font-size:13px;font-weight:600;">AI Skill Development (Weekly)</div>
+          <div class="chart-container"><div class="chart-bar" style="height:30%"></div><div class="chart-bar" style="height:45%"></div><div class="chart-bar green" style="height:60%"></div><div class="chart-bar" style="height:55%"></div><div class="chart-bar green" style="height:75%"></div><div class="chart-bar" style="height:65%"></div><div class="chart-bar green" style="height:85%"></div></div>
+          <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--muted);margin-bottom:16px;"><span>Mon</span><span>Tue</span><span>Wed</span><span>Thu</span><span>Fri</span><span>Sat</span><span>Sun</span></div>
+          <div style="margin-bottom:12px;font-size:13px;font-weight:600;">Platform Engagement</div>
+          <div class="donut"></div>
+          <div class="legend"><div class="legend-item"><div class="legend-dot" style="background:var(--accent)"></div>Course Content 45%</div><div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>AI Tools 35%</div><div class="legend-item"><div class="legend-dot" style="background:var(--accent2)"></div>Career Research 15%</div><div class="legend-item"><div class="legend-dot" style="background:var(--orange)"></div>Community 5%</div></div>
+        </div>
+        <div class="token-card" style="margin-top:20px;">
+          <div class="label">My Token Balance & Credits</div><div class="balance">75 TOKENS</div><div style="font-size:12px;color:var(--muted);margin-bottom:12px;">AVAILABLE</div>
+          <div class="activity"><span>Resume Check</span><span class="neg">-5 tokens</span></div>
+          <div class="activity"><span>Course Completion</span><span class="pos">+10 tokens</span></div>
+          <div class="activity"><span>Course Completion</span><span class="pos">+10 tokens</span></div>
+          <button class="btn" style="width:100%;background:linear-gradient(135deg,var(--orange),#ea580c);margin-top:12px;">BUY MORE TOKENS</button>
+        </div>
+      </div>
+      <div>
+        <div class="card"><h3>Career Opportunities</h3>
+          <div class="job-item"><div class="title">Junior AI Analyst</div><div class="company">TechCorp</div><span class="btn">View Details →</span></div>
+          <div class="job-item"><div class="title">AI Intern</div><div class="company">Innovate Solutions</div><span class="btn">View Details →</span></div>
+          <div class="job-item"><div class="title">Junior AI Analyst</div><div class="company">TechCorp</div><span class="btn">View Details →</span></div>
+        </div>
+        <div class="card" style="margin-top:20px;"><h3>Important Updates</h3>
+          <div class="update-item"><span class="badge">NEW</span> New course 'Generative AI Applications' live</div>
+          <div class="update-item"><span class="badge">NEW</span> New course 'Generative AI Applications' live</div>
+        </div>
+        <div class="card" style="margin-top:20px;"><h3>Financial Summary</h3>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);"><span>Gross Revenue</span><span>Rp 50.000.000</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);"><span>PPN 11%</span><span style="color:var(--orange);">-Rp 5.500.000</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);"><span>Net Total</span><span>Rp 44.500.000</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;border-bottom:1px solid var(--border);"><span>Net Profit (25%)</span><span style="color:var(--green);">Rp 11.125.000</span></div>
+          <div style="display:flex;justify-content:space-between;font-size:13px;padding:6px 0;"><span>Operational (75%)</span><span>Rp 33.375.000</span></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- COURSES -->
+<div id="courses" class="page">
+  <div class="sidebar"><div class="logo" onclick="showPage('login')">SA</div>
+    <div class="nav-item" onclick="showPage('home')">🏠<span class="tooltip">Home</span></div><div class="nav-item active" onclick="showPage('courses')">📚<span class="tooltip">Courses</span></div>
+    <div class="nav-item" onclick="showPage('community')">👥<span class="tooltip">Community</span></div><div class="nav-item" onclick="showPage('schedule')">📅<span class="tooltip">Schedule</span></div>
+    <div class="nav-item" onclick="showPage('messages')">💬<span class="tooltip">Messages</span></div><div class="nav-item" onclick="showPage('tools')">🔧<span class="tooltip">Tools</span></div>
+    <div class="nav-item" onclick="showPage('data')">📊<span class="tooltip">Data</span></div><div class="nav-item" onclick="showPage('settings')">⚙️<span class="tooltip">Settings</span></div>
+    <div class="nav-item" onclick="showPage('login')">🚪<span class="tooltip">Logout</span></div></div>
+  <div class="main"><div class="header"><div><h1>COURSES</h1></div><div class="user"><div class="info"><div class="name">Sarah J.</div><div class="role">Student</div></div><div class="avatar">SJ</div></div></div>
+    <button class="back-btn" onclick="showPage('home')">← Kembali ke Home</button>
+    <div class="card"><h3>AI Literacy Courses</h3>
+      <div class="course-card"><h4>Fundamentals of AI</h4><p>Dasar-dasar kecerdasan buatan, machine learning, dan neural networks.</p><div class="progress-bar" style="margin:8px 0;"><div class="fill green" style="width:65%"></div></div><span class="status progress">65% Complete</span></div>
+      <div class="course-card"><h4>Ethics in AI</h4><p>Etika penggunaan AI, bias, privasi, dan dampak sosial.</p><div class="progress-bar" style="margin:8px 0;"><div class="fill purple" style="width:30%"></div></div><span class="status progress">30% Complete</span></div>
+      <div class="course-card"><h4>AI for Research</h4><p>Penggunaan AI untuk penelitian akademik dan analisis data.</p><div class="progress-bar" style="margin:8px 0;"><div class="fill grey" style="width:0%"></div></div><span class="status notstarted">Not Started</span></div>
+      <div class="course-card"><h4>Generative AI Applications</h4><p>Aplikasi AI generatif: ChatGPT, DALL-E, Midjourney, dan lainnya.</p><div class="progress-bar" style="margin:8px 0;"><div class="fill grey" style="width:0%"></div></div><span class="status notstarted">NEW — Not Started</span></div>
+    </div>
+    <div class="card" style="margin-top:20px;"><h3>Career Pathways</h3>
+      <div class="course-card"><h4>AI Product Manager</h4><p>Jalur karir menjadi Product Manager di bidang AI.</p><div class="progress-bar" style="margin:8px 0;"><div class="fill blue" style="width:20%"></div></div><span class="status progress">20% Complete</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- DATA -->
+<div id="data" class="page">
+  <div class="sidebar"><div class="logo" onclick="showPage('login')">SA</div>
+    <div class="nav-item" onclick="showPage('home')">🏠<span class="tooltip">Home</span></div><div class="nav-item" onclick="showPage('courses')">📚<span class="tooltip">Courses</span></div>
+    <div class="nav-item" onclick="showPage('community')">👥<span class="tooltip">Community</span></div><div class="nav-item" onclick="showPage('schedule')">📅<span class="tooltip">Schedule</span></div>
+    <div class="nav-item" onclick="showPage('messages')">💬<span class="tooltip">Messages</span></div><div class="nav-item" onclick="showPage('tools')">🔧<span class="tooltip">Tools</span></div>
+    <div class="nav-item active" onclick="showPage('data')">📊<span class="tooltip">Data</span></div><div class="nav-item" onclick="showPage('settings')">⚙️<span class="tooltip">Settings</span></div>
+    <div class="nav-item" onclick="showPage('login')">🚪<span class="tooltip">Logout</span></div></div>
+  <div class="main"><div class="header"><div><h1>DATA & ANALYTICS</h1></div><div class="user"><div class="info"><div class="name">Sarah J.</div><div class="role">Student</div></div><div class="avatar">SJ</div></div></div>
+    <button class="back-btn" onclick="showPage('home')">← Kembali ke Home</button>
+    <div class="card"><h3>Platform Engagement Data</h3>
+      <table class="data-table"><tr><th>Metrik</th><th>Nilai</th><th>Tren</th></tr>
+        <tr><td>Course Content</td><td>45%</td><td style="color:var(--green);">↑ +5%</td></tr>
+        <tr><td>AI Tools</td><td>35%</td><td style="color:var(--green);">↑ +3%</td></tr>
+        <tr><td>Career Research</td><td>15%</td><td style="color:var(--orange);">↓ -2%</td></tr>
+        <tr><td>Community</td><td>5%</td><td style="color:var(--green);">↑ +1%</td></tr>
+      </table></div>
+    <div class="card" style="margin-top:20px;"><h3>Financial Summary</h3>
+      <table class="data-table"><tr><th>Item</th><th>Nilai</th></tr>
+        <tr><td>Gross Revenue</td><td>Rp 50.000.000</td></tr>
+        <tr><td>PPN 11%</td><td style="color:var(--orange);">-Rp 5.500.000</td></tr>
+        <tr><td>Net Total</td><td>Rp 44.500.000</td></tr>
+        <tr><td>Net Profit (25%)</td><td style="color:var(--green);">Rp 11.125.000</td></tr>
+        <tr><td>Operational (75%)</td><td>Rp 33.375.000</td></tr>
+      </table></div>
+    <div class="card" style="margin-top:20px;"><h3>Token History</h3>
+      <table class="data-table"><tr><th>Aktivitas</th><th>Token</th><th>Tanggal</th></tr>
+        <tr><td>Resume Check</td><td style="color:var(--orange);">-5</td><td>21 Okt 2026</td></tr>
+        <tr><td>Course Completion</td><td style="color:var(--green);">+10</td><td>20 Okt 2026</td></tr>
+        <tr><td>Course Completion</td><td style="color:var(--green);">+10</td><td>19 Okt 2026</td></tr>
+      </table></div>
+  </div>
+</div>
+
+<!-- SETTINGS -->
+<div id="settings" class="page">
+  <div class="sidebar"><div class="logo" onclick="showPage('login')">SA</div>
+    <div class="nav-item" onclick="showPage('home')">🏠<span class="tooltip">Home</span></div><div class="nav-item" onclick="showPage('courses')">📚<span class="tooltip">Courses</span></div>
+    <div class="nav-item" onclick="showPage('community')">👥<span class="tooltip">Community</span></div><div class="nav-item" onclick="showPage('schedule')">📅<span class="tooltip">Schedule</span></div>
+    <div class="nav-item" onclick="showPage('messages')">💬<span class="tooltip">Messages</span></div><div class="nav-item" onclick="showPage('tools')">🔧<span class="tooltip">Tools</span></div>
+    <div class="nav-item" onclick="showPage('data')">📊<span class="tooltip">Data</span></div><div class="nav-item active" onclick="showPage('settings')">⚙️<span class="tooltip">Settings</span></div>
+    <div class="nav-item" onclick="showPage('login')">🚪<span class="tooltip">Logout</span></div></div>
+  <div class="main"><div class="header"><div><h1>SETTINGS</h1></div><div class="user"><div class="info"><div class="name">Sarah J.</div><div class="role">Student</div></div><div class="avatar">SJ</div></div></div>
+    <button class="back-btn" onclick="showPage('home')">← Kembali ke Home</button>
+    <div class="card"><h3>Profil Pengguna</h3>
+      <div style="margin-bottom:12px;"><label style="font-size:13px;color:var(--muted);">Nama</label><input style="width:100%;padding:10px;background:var(--card2);border:1px solid var(--border);border-radius:8px;color:var(--text);margin-top:4px;" value="Sarah J." /></div>
+      <div style="margin-bottom:12px;"><label style="font-size:13px;color:var(--muted);">Email</label><input style="width:100%;padding:10px;background:var(--card2);border:1px solid var(--border);border-radius:8px;color:var(--text);margin-top:4px;" value="sarah@example.com" /></div>
+      <div style="margin-bottom:12px;"><label style="font-size:13px;color:var(--muted);">Role</label><input style="width:100%;padding:10px;background:var(--card2);border:1px solid var(--border);border-radius:8px;color:var(--text);margin-top:4px;" value="Student" disabled /></div>
+      <button class="btn" style="margin-top:8px;">Simpan Perubahan</button></div>
+    <div class="card" style="margin-top:20px;"><h3>Preferensi</h3>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);"><span>Tema Gelap</span><span style="color:var(--green);">Aktif</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid var(--border);"><span>Notifikasi Email</span><span style="color:var(--green);">Aktif</span></div>
+      <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;"><span>Notifikasi Telegram</span><span style="color:var(--green);">Aktif</span></div>
+    </div>
+  </div>
+</div>
+
+<!-- COMMUNITY -->
+<div id="community" class="page">
+  <div class="sidebar"><div class="logo" onclick="showPage('login')">SA</div>
+    <div class="nav-item" onclick="showPage('home')">🏠<span class="tooltip">Home</span></div><div class="nav-item" onclick="showPage('courses')">📚<span class="tooltip">Courses</span></div>
+    <div class="nav-item active" onclick="showPage('community')">👥<span class="tooltip">Community</span></div><div class="nav-item" onclick="showPage('schedule')">📅<span class="tooltip">Schedule</span></div>
+    <div class="nav-item" onclick="showPage('messages')">💬<span class="tooltip">Messages</span></div><div class="nav-item" onclick="showPage('tools')">🔧<span class="tooltip">Tools</span></div>
+    <div class="nav-item" onclick="showPage('data')">📊<span class="tooltip">Data</span></div><div class="nav-item" onclick="showPage('settings')">⚙️<span class="tooltip">Settings</span></div>
+    <div class="nav-item" onclick="showPage('login')">🚪<span class="tooltip">Logout</span></div></div>
+  <div class="main"><div class="header"><div><h1>COMMUNITY</h1></div><div class="user"><div class="info"><div class="name">Sarah J.</div><div class="role">Student</div></div><div class="avatar">SJ</div></div></div>
+    <button class="back-btn" onclick="showPage('home')">← Kembali ke Home</button>
+    <div class="card"><h3>Komunitas SMART AI</h3>
+      <div class="job-item"><div class="title">Forum Diskusi AI</div><div class="company">45 anggota online</div></div>
+      <div class="job-item"><div class="title">Grup Belajar Ethics in AI</div><div class="company">12 anggota online</div></div>
+      <div class="job-item"><div class="title">Grup Business Model Canvas</div><div class="company">8 anggota online</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- TOOLS -->
+<div id="tools" class="page">
+  <div class="sidebar"><div class="logo" onclick="showPage('login')">SA</div>
+    <div class="nav-item" onclick="showPage('home')">🏠<span class="tooltip">Home</span></div><div class="nav-item" onclick="showPage('courses')">📚<span class="tooltip">Courses</span></div>
+    <div class="nav-item" onclick="showPage('community')">👥<span class="tooltip">Community</span></div><div class="nav-item" onclick="showPage('schedule')">📅<span class="tooltip">Schedule</span></div>
+    <div class="nav-item" onclick="showPage('messages')">💬<span class="tooltip">Messages</span></div><div class="nav-item active" onclick="showPage('tools')">🔧<span class="tooltip">Tools</span></div>
+    <div class="nav-item" onclick="showPage('data')">📊<span class="tooltip">Data</span></div><div class="nav-item" onclick="showPage('settings')">⚙️<span class="tooltip">Settings</span></div>
+    <div class="nav-item" onclick="showPage('login')">🚪<span class="tooltip">Logout</span></div></div>
+  <div class="main"><div class="header"><div><h1>AI TOOLS</h1></div><div class="user"><div class="info"><div class="name">Sarah J.</div><div class="role">Student</div></div><div class="avatar">SJ</div></div></div>
+    <button class="back-btn" onclick="showPage('home')">← Kembali ke Home</button>
+    <div class="card"><h3>AI Tool Workspace</h3>
+      <div class="tool-card"><div class="info"><h4>Prompt Studio</h4><p>For prompt engineering — buat prompt etis & efektif</p></div><button class="btn">LAUNCH</button></div>
+      <div class="tool-card"><div class="info"><h4>Research Assistant</h4><p>For academic research — validasi tugas & riset</p></div><button class="btn">LAUNCH</button></div>
+      <div class="tool-card"><div class="info"><h4>Resume Optimizer</h4><p>For resume improvement — analisis skor ATS</p></div><button class="btn">LAUNCH</button></div>
+      <div class="tool-card"><div class="info"><h4>Interview Prep AI</h4><p>For interview practice — simulasi wawancara</p></div><button class="btn">LAUNCH</button></div>
+      <div class="tool-card"><div class="info"><h4>Business Outline Generator</h4><p>Pembuat BMC & Pitch Deck otomatis</p></div><button class="btn">LAUNCH</button></div>
+      <div class="tool-card"><div class="info"><h4>Paper Trading Simulator</h4><p>Simulasi investasi saham & obligasi</p></div><button class="btn">LAUNCH</button></div>
+      <div class="tool-card"><div class="info"><h4>LinkedIn AI Super Reviewer</h4><p>Analisis skor resume & profil LinkedIn</p></div><button class="btn">LAUNCH</button></div>
+    </div>
+  </div>
+</div>
+
+<!-- SCHEDULE -->
+<div id="schedule" class="page">
+  <div class="sidebar"><div class="logo" onclick="showPage('login')">SA</div>
+    <div class="nav-item" onclick="showPage('home')">🏠<span class="tooltip">Home</span></div><div class="nav-item" onclick="showPage('courses')">📚<span class="tooltip">Courses</span></div>
+    <div class="nav-item" onclick="showPage('community')">👥<span class="tooltip">Community</span></div><div class="nav-item active" onclick="showPage('schedule')">📅<span class="tooltip">Schedule</span></div>
+    <div class="nav-item" onclick="showPage('messages')">💬<span class="tooltip">Messages</span></div><div class="nav-item" onclick="showPage('tools')">🔧<span class="tooltip">Tools</span></div>
+    <div class="nav-item" onclick="showPage('data')">📊<span class="tooltip">Data</span></div><div class="nav-item" onclick="showPage('settings')">⚙️<span class="tooltip">Settings</span></div>
+    <div class="nav-item" onclick="showPage('login')">🚪<span class="tooltip">Logout</span></div></div>
+  <div class="main"><div class="header"><div><h1>SCHEDULE</h1></div><div class="user"><div class="info"><div class="name">Sarah J.</div><div class="role">Student</div></div><div class="avatar">SJ</div></div></div>
+    <button class="back-btn" onclick="showPage('home')">← Kembali ke Home</button>
+    <div class="card"><h3>Jadwal Minggu Ini</h3>
+      <div class="job-item"><div class="title">Fundamentals of AI — Modul 3</div><div class="company">Senin, 21 Okt 2026 • 10:00 WIB</div></div>
+      <div class="job-item"><div class="title">Ethics in AI — Diskusi</div><div class="company">Rabu, 23 Okt 2026 • 14:00 WIB</div></div>
+      <div class="job-item"><div class="title">Career Webinar: AI Product Manager</div><div class="company">Jumat, 25 Okt 2026 • 16:00 WIB</div></div>
+    </div>
+  </div>
+</div>
+
+<!-- MESSAGES -->
+<div id="messages" class="page">
+  <div class="sidebar"><div class="logo" onclick="showPage('login')">SA</div>
+    <div class="nav-item" onclick="showPage('home')">🏠<span class="tooltip">Home</span></div><div class="nav-item" onclick="showPage('courses')">📚<span class="tooltip">Courses</span></div>
+    <div class="nav-item" onclick="showPage('community')">👥<span class="tooltip">Community</span></div><div class="nav-item" onclick="showPage('schedule')">📅<span class="tooltip">Schedule</span></div>
+    <div class="nav-item active" onclick="showPage('messages')">💬<span class="tooltip">Messages</span></div><div class="nav-item" onclick="showPage('tools')">🔧<span class="tooltip">Tools</span></div>
+    <div class="nav-item" onclick="showPage('data')">📊<span class="tooltip">Data</span></div><div class="nav-item" onclick="showPage('settings')">⚙️<span class="tooltip">Settings</span></div>
+    <div class="nav-item" onclick="showPage('login')">🚪<span class="tooltip">Logout</span></div></div>
+  <div class="main"><div class="header"><div><h1>MESSAGES</h1></div><div class="user"><div class="info"><div class="name">Sarah J.</div><div class="role">Student</div></div><div class="avatar">SJ</div></div></div>
+    <button class="back-btn" onclick="showPage('home')">← Kembali ke Home</button>
+    <div class="card"><h3>Pesan Terbaru</h3>
+      <div class="job-item"><div class="title">Admin SMART AI</div><div class="company">Token Anda telah ditambahkan +10 tokens</div></div>
+      <div class="job-item"><div class="title">System</div><div class="company">Kursus baru 'Generative AI Applications' tersedia</div></div>
+      <div class="job-item"><div class="title">Mentor AI</div><div class="company">Feedback untuk resume Anda sudah siap</div></div>
+    </div>
+  </div>
+</div>
+
+<script>
+function showPage(pageId) {
+  document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.getElementById(pageId).classList.add('active');
+  window.scrollTo(0,0);
+}
+
+async function doLogin() {
+  const username = document.getElementById('loginUser').value;
+  const password = document.getElementById('loginPass').value;
+  const msg = document.getElementById('loginMsg');
+  if (!username || !password) { msg.textContent = 'Isi username dan password.'; msg.style.color = 'red'; return; }
+  try {
+    const res = await fetch('/api/login', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({username, password}) });
+    const data = await res.json();
+    if (data.status === 'success') {
+      msg.textContent = 'Login berhasil! Selamat datang ' + data.user.full_name;
+      msg.style.color = 'green';
+      setTimeout(() => showPage('home'), 1000);
+    } else {
+      msg.textContent = data.message;
+      msg.style.color = 'red';
+    }
+  } catch (e) {
+    msg.textContent = 'Error koneksi ke server.';
+    msg.style.color = 'red';
+  }
+}
+
+async function doGoogleLogin() {
+  const email = prompt('Masukkan email Google Anda:');
+  if (!email) return;
+  const msg = document.getElementById('loginMsg');
+  try {
+    const res = await fetch('/api/login/google', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({google_id: 'google_' + email, email: email, full_name: email.split('@')[0]}) });
+    const data = await res.json();
+    if (data.status === 'success') {
+      msg.textContent = 'Login Google berhasil!';
+      msg.style.color = 'green';
+      setTimeout(() => showPage('home'), 1000);
+    } else {
+      msg.textContent = data.message;
+      msg.style.color = 'red';
+    }
+  } catch (e) {
+    msg.textContent = 'Error koneksi.';
+    msg.style.color = 'red';
+  }
+}
+
+async function doCampusLogin() {
+  const email = prompt('Masukkan email kampus Anda:');
+  const campus = prompt('Nama kampus (contoh: UGM, ITB, dll):');
+  if (!email || !campus) return;
+  const msg = document.getElementById('loginMsg');
+  try {
+    const res = await fetch('/api/login/campus', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({sso_id: 'campus_' + email, email: email, full_name: email.split('@')[0], campus_name: campus}) });
+    const data = await res.json();
+    if (data.status === 'success') {
+      msg.textContent = 'Login Kampus berhasil!';
+      msg.style.color = 'green';
+      setTimeout(() => showPage('home'), 1000);
+    } else {
+      msg.textContent = data.message;
+      msg.style.color = 'red';
+    }
+  } catch (e) {
+    msg.textContent = 'Error koneksi.';
+    msg.style.color = 'red';
+  }
+}
+
+showPage('login');
+</script>
+</body>
+</html>
