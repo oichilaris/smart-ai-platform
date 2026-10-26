@@ -1,0 +1,374 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SMART AI — Virtual Office</title>
+<style>
+  :root { --bg:#0a0e27; --card:#141937; --card2:#1a2045; --accent:#00d4ff; --accent2:#a855f7; --text:#e2e8f0; --muted:#94a3b8; --border:#2a3158; --green:#22c55e; --orange:#f97316; --red:#ef4444; --gold:#fbbf24; }
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; overflow:hidden; }
+  
+  /* Virtual Office Canvas */
+  .office-container { position:relative; width:100vw; height:100vh; background:linear-gradient(180deg, #0a0e27 0%, #1a1a3e 100%); overflow:hidden; }
+  
+  /* Floor */
+  .floor { position:absolute; bottom:0; left:0; right:0; height:40%; background:linear-gradient(180deg, #1a2045 0%, #0f1535 100%); border-top:2px solid var(--border); }
+  .floor::before { content:''; position:absolute; top:0; left:0; right:0; height:2px; background:linear-gradient(90deg, transparent, var(--accent), transparent); }
+  
+  /* Rooms */
+  .room { position:absolute; border:2px solid var(--border); border-radius:12px; background:rgba(20,25,55,0.8); backdrop-filter:blur(10px); cursor:pointer; transition:all 0.3s; display:flex; flex-direction:column; align-items:center; justify-content:center; }
+  .room:hover { border-color:var(--accent); transform:scale(1.05); box-shadow:0 0 20px rgba(0,212,255,0.3); }
+  .room.active { border-color:var(--accent); box-shadow:0 0 30px rgba(0,212,255,0.5); }
+  .room .icon { font-size:32px; margin-bottom:8px; }
+  .room .name { font-size:12px; font-weight:600; color:var(--text); }
+  .room .status { font-size:10px; color:var(--muted); margin-top:4px; }
+  
+  /* Room positions */
+  .room-reception { top:10%; left:5%; width:180px; height:120px; }
+  .room-dashboard { top:10%; left:28%; width:200px; height:120px; }
+  .room-courses { top:10%; left:53%; width:180px; height:120px; }
+  .room-tools { top:10%; left:76%; width:180px; height:120px; }
+  .room-data { top:45%; left:5%; width:180px; height:120px; }
+  .room-messages { top:45%; left:28%; width:200px; height:120px; }
+  .room-schedule { top:45%; left:53%; width:180px; height:120px; }
+  .room-community { top:45%; left:76%; width:180px; height:120px; }
+  .room-settings { top:75%; left:40%; width:200px; height:100px; }
+  
+  /* Avatar */
+  .avatar { position:absolute; bottom:15%; left:50%; transform:translateX(-50%); width:60px; height:80px; transition:all 0.5s; }
+  .avatar-body { width:40px; height:50px; background:linear-gradient(180deg,var(--accent),var(--accent2)); border-radius:20px 20px 8px 8px; margin:0 auto; }
+  .avatar-head { width:30px; height:30px; background:var(--card2); border-radius:50%; margin:0 auto 4px; border:2px solid var(--accent); }
+  .avatar-name { text-align:center; font-size:11px; color:var(--accent); margin-top:4px; }
+  
+  /* Info panel */
+  .info-panel { position:absolute; top:20px; right:20px; width:300px; background:rgba(20,25,55,0.9); border:1px solid var(--border); border-radius:12px; padding:16px; backdrop-filter:blur(10px); }
+  .info-panel h3 { color:var(--accent); font-size:14px; margin-bottom:8px; }
+  .info-panel p { font-size:12px; color:var(--muted); line-height:1.6; }
+  .info-panel .stat { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px solid var(--border); }
+  .info-panel .stat:last-child { border-bottom:none; }
+  .info-panel .stat .label { color:var(--muted); font-size:11px; }
+  .info-panel .stat .value { color:var(--text); font-size:11px; font-weight:600; }
+  
+  /* Login overlay */
+  .login-overlay { position:fixed; top:0; left:0; right:0; bottom:0; background:rgba(10,14,39,0.95); display:flex; align-items:center; justify-content:center; z-index:100; backdrop-filter:blur(20px); }
+  .login-box { background:var(--card); border:1px solid var(--border); border-radius:16px; padding:32px; width:360px; text-align:center; }
+  .login-box h2 { background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; font-size:24px; margin-bottom:4px; }
+  .login-box p { color:var(--muted); font-size:13px; margin-bottom:20px; }
+  .login-box input { width:100%; padding:10px 14px; margin-bottom:10px; background:var(--card2); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:13px; }
+  .login-box input:focus { outline:none; border-color:var(--accent); }
+  .login-box button { width:100%; padding:10px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border:none; border-radius:8px; color:#fff; font-weight:600; cursor:pointer; font-size:14px; margin-top:8px; }
+  .login-box button:hover { opacity:0.9; }
+  .login-box .msg { margin-top:8px; font-size:12px; min-height:16px; }
+  .login-box .sso { display:flex; gap:8px; margin-top:12px; }
+  .login-box .sso button { flex:1; background:var(--card2); border:1px solid var(--border); font-size:12px; padding:8px; }
+  
+  /* Room content panel */
+  .room-content { position:fixed; bottom:20px; left:50%; transform:translateX(-50%); width:90%; max-width:800px; background:rgba(20,25,55,0.95); border:1px solid var(--border); border-radius:12px; padding:16px; backdrop-filter:blur(10px); display:none; }
+  .room-content.active { display:block; }
+  .room-content h3 { color:var(--accent); font-size:16px; margin-bottom:8px; }
+  .room-content .close { position:absolute; top:8px; right:12px; cursor:pointer; color:var(--muted); font-size:18px; }
+  .room-content .close:hover { color:var(--text); }
+  
+  /* Floating particles */
+  .particle { position:absolute; width:2px; height:2px; background:var(--accent); border-radius:50%; animation:float 8s infinite; opacity:0.3; }
+  @keyframes float { 0%,100% { transform:translateY(0) translateX(0); opacity:0.3; } 50% { transform:translateY(-100px) translateX(50px); opacity:0.8; } }
+  
+  /* Top bar */
+  .top-bar { position:fixed; top:0; left:0; right:0; height:48px; background:rgba(10,14,39,0.9); backdrop-filter:blur(10px); border-bottom:1px solid var(--border); display:flex; align-items:center; padding:0 20px; z-index:50; }
+  .top-bar .logo { font-weight:700; font-size:16px; background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+  .top-bar .nav { margin-left:auto; display:flex; gap:16px; }
+  .top-bar .nav a { color:var(--muted); text-decoration:none; font-size:12px; cursor:pointer; }
+  .top-bar .nav a:hover { color:var(--accent); }
+  
+  /* Responsive */
+  @media (max-width:768px) {
+    .room { width:120px !important; height:80px !important; }
+    .room .icon { font-size:20px; }
+    .room .name { font-size:10px; }
+    .info-panel { display:none; }
+  }
+</style>
+</head>
+<body>
+
+<!-- Top Bar -->
+<div class="top-bar">
+  <div class="logo">SMART AI Virtual Office</div>
+  <div class="nav">
+    <a onclick="showRoom('dashboard')">Dashboard</a>
+    <a onclick="showRoom('courses')">Kursus</a>
+    <a onclick="showRoom('tools')">Tools</a>
+    <a onclick="showRoom('community')">Komunitas</a>
+    <a onclick="doLogout()">Logout</a>
+  </div>
+</div>
+
+<!-- Virtual Office -->
+<div class="office-container" id="office">
+  <!-- Particles -->
+  <div class="particle" style="top:20%;left:10%;animation-delay:0s;"></div>
+  <div class="particle" style="top:30%;left:30%;animation-delay:2s;"></div>
+  <div class="particle" style="top:15%;left:60%;animation-delay:4s;"></div>
+  <div class="particle" style="top:25%;left:80%;animation-delay:6s;"></div>
+  
+  <!-- Rooms -->
+  <div class="room room-reception" onclick="showRoom('reception')">
+    <div class="icon">🏢</div>
+    <div class="name">Resepsionis</div>
+    <div class="status">Info & Bantuan</div>
+  </div>
+  <div class="room room-dashboard" onclick="showRoom('dashboard')">
+    <div class="icon">📊</div>
+    <div class="name">Dashboard</div>
+    <div class="status">Progress & Stats</div>
+  </div>
+  <div class="room room-courses" onclick="showRoom('courses')">
+    <div class="icon">📚</div>
+    <div class="name">Ruang Kursus</div>
+    <div class="status">Belajar & Sertifikat</div>
+  </div>
+  <div class="room room-tools" onclick="showRoom('tools')">
+    <div class="icon">🛠️</div>
+    <div class="name">Ruang Tools</div>
+    <div class="status">AI & Resume</div>
+  </div>
+  <div class="room room-data" onclick="showRoom('data')">
+    <div class="icon">📈</div>
+    <div class="name">Ruang Data</div>
+    <div class="status">Analytics</div>
+  </div>
+  <div class="room room-messages" onclick="showRoom('messages')">
+    <div class="icon">💬</div>
+    <div class="name">Ruang Pesan</div>
+    <div class="status">Chat & Diskusi</div>
+  </div>
+  <div class="room room-schedule" onclick="showRoom('schedule')">
+    <div class="icon">📅</div>
+    <div class="name">Ruang Jadwal</div>
+    <div class="status">Kalender & Event</div>
+  </div>
+  <div class="room room-community" onclick="showRoom('community')">
+    <div class="icon">👥</div>
+    <div class="name">Ruang Komunitas</div>
+    <div class="status">Forum & Jaringan</div>
+  </div>
+  <div class="room room-settings" onclick="showRoom('settings')">
+    <div class="icon">⚙️</div>
+    <div class="name">Pengaturan</div>
+    <div class="status">Profil & Akun</div>
+  </div>
+  
+  <!-- Avatar -->
+  <div class="avatar" id="avatar">
+    <div class="avatar-head"></div>
+    <div class="avatar-body"></div>
+    <div class="avatar-name" id="avatarName">User</div>
+  </div>
+  
+  <!-- Info Panel -->
+  <div class="info-panel">
+    <h3>📊 Status Hari Ini</h3>
+    <div class="stat"><span class="label">Kursus selesai</span><span class="value">3/8</span></div>
+    <div class="stat"><span class="label">Sertifikat</span><span class="value">1</span></div>
+    <div class="stat"><span class="label">Poin</span><span class="value">1,250</span></div>
+    <div class="stat"><span class="label">Streak</span><span class="value">7 hari</span></div>
+    <div class="stat"><span class="label">Komunitas</span><span class="value">42 anggota</span></div>
+  </div>
+  
+  <!-- Floor -->
+  <div class="floor"></div>
+</div>
+
+<!-- Room Content Panel -->
+<div class="room-content" id="roomContent">
+  <span class="close" onclick="closeRoom()">✕</span>
+  <h3 id="roomTitle">Room</h3>
+  <div id="roomBody"></div>
+</div>
+
+<!-- Login Overlay -->
+<div class="login-overlay" id="loginOverlay">
+  <div class="login-box">
+    <h2>SMART AI</h2>
+    <p>Virtual Office — Literasi Digital & Karir</p>
+    <input type="text" id="loginUser" placeholder="Username" />
+    <input type="password" id="loginPass" placeholder="Password" />
+    <button onclick="doLogin()">Masuk ke Kantor</button>
+    <div class="msg" id="loginMsg"></div>
+    <div class="sso">
+      <button onclick="doGoogleLogin()">🔵 Google</button>
+      <button onclick="doCampusLogin()">🏛️ Kampus</button>
+    </div>
+    <p style="margin-top:16px;font-size:12px;color:var(--muted);">Belum punya akun? <a href="#" onclick="showRegister()" style="color:var(--accent);">Daftar</a></p>
+  </div>
+</div>
+
+<!-- Register Overlay -->
+<div class="login-overlay" id="registerOverlay" style="display:none;">
+  <div class="login-box">
+    <h2>Daftar</h2>
+    <p>Buat akun SMART AI</p>
+    <input type="text" id="regUser" placeholder="Username" />
+    <input type="email" id="regEmail" placeholder="Email" />
+    <input type="password" id="regPass" placeholder="Password" />
+    <input type="text" id="regName" placeholder="Nama Lengkap" />
+    <button onclick="doRegister()">Daftar</button>
+    <div class="msg" id="regMsg"></div>
+    <p style="margin-top:16px;font-size:12px;color:var(--muted);">Sudah punya akun? <a href="#" onclick="showLogin()" style="color:var(--accent);">Login</a></p>
+  </div>
+</div>
+
+<script>
+const roomData = {
+  reception: { title: '🏢 Resepsionis', body: '<p>Selamat datang di SMART AI Virtual Office! Pilih ruangan untuk mulai belajar.</p><p style="margin-top:8px;color:var(--muted);font-size:12px;">Gunakan menu di atas atau klik ruangan di peta.</p>' },
+  dashboard: { title: '📊 Dashboard', body: '<p>Progress belajar: 3/8 kursus selesai</p><p>Sertifikat: 1</p><p>Poin: 1,250</p><p>Streak: 7 hari</p>' },
+  courses: { title: '📚 Ruang Kursus', body: '<p>Kursus tersedia:</p><ul style="margin-top:8px;font-size:12px;color:var(--muted);"><li>Generative AI Applications</li><li>Prompt Engineering</li><li>AI Ethics & Safety</li><li>Data Literacy</li></ul>' },
+  tools: { title: '🛠️ Ruang Tools', body: '<p>Tools AI:</p><ul style="margin-top:8px;font-size:12px;color:var(--muted);"><li>Resume Builder</li><li>Interview Simulator</li><li>Cover Letter Generator</li><li>Skill Analyzer</li></ul>' },
+  data: { title: '📈 Ruang Data', body: '<p>Analytics & Statistik:</p><p style="margin-top:8px;font-size:12px;color:var(--muted);">Waktu belajar: 42 jam</p><p style="font-size:12px;color:var(--muted);">Topik favorit: AI & Machine Learning</p>' },
+  messages: { title: '💬 Ruang Pesan', body: '<p>Pesan terbaru:</p><p style="margin-top:8px;font-size:12px;color:var(--muted);">Mentor AI: Feedback resume sudah siap</p><p style="font-size:12px;color:var(--muted);">Komunitas: Diskusi baru tentang GPT-5</p>' },
+  schedule: { title: '📅 Ruang Jadwal', body: '<p>Jadwal hari ini:</p><p style="margin-top:8px;font-size:12px;color:var(--muted);">10:00 - Kursus Generative AI</p><p style="font-size:12px;color:var(--muted);">14:00 - Mentoring session</p>' },
+  community: { title: '👥 Ruang Komunitas', body: '<p>Anggota online: 42</p><p style="margin-top:8px;font-size:12px;color:var(--muted);">Diskusi aktif: 5</p><p style="font-size:12px;color:var(--muted);">Event terdekat: Webinar AI Ethics (25 Okt)</p>' },
+  settings: { title: '⚙️ Pengaturan', body: '<p>Profil: <span id="userName">User</span></p><p style="margin-top:8px;font-size:12px;color:var(--muted);">Role: USER</p><button onclick="doLogout()" style="margin-top:12px;background:var(--red);color:#fff;border:none;padding:6px 12px;border-radius:6px;cursor:pointer;">Logout</button>' }
+};
+
+function showRoom(roomId) {
+  const data = roomData[roomId];
+  if (!data) return;
+  document.getElementById('roomTitle').textContent = data.title;
+  document.getElementById('roomBody').innerHTML = data.body;
+  document.getElementById('roomContent').classList.add('active');
+  document.querySelectorAll('.room').forEach(r => r.classList.remove('active'));
+  const roomEl = document.querySelector('.room-' + roomId);
+  if (roomEl) roomEl.classList.add('active');
+}
+
+function closeRoom() {
+  document.getElementById('roomContent').classList.remove('active');
+  document.querySelectorAll('.room').forEach(r => r.classList.remove('active'));
+}
+
+function showLogin() {
+  document.getElementById('loginOverlay').style.display = 'flex';
+  document.getElementById('registerOverlay').style.display = 'none';
+}
+
+function showRegister() {
+  document.getElementById('loginOverlay').style.display = 'none';
+  document.getElementById('registerOverlay').style.display = 'flex';
+}
+
+async function doLogin() {
+  const username = document.getElementById('loginUser').value;
+  const password = document.getElementById('loginPass').value;
+  const msg = document.getElementById('loginMsg');
+  if (!username || !password) { msg.textContent = 'Isi username dan password.'; msg.style.color = 'red'; return; }
+  try {
+    const res = await fetch('/api/login', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({username, password}) });
+    const data = await res.json();
+    if (data.status === 'success') {
+      msg.textContent = 'Login berhasil!';
+      msg.style.color = 'green';
+      document.getElementById('avatarName').textContent = data.user.full_name || data.user.username;
+      document.getElementById('userName').textContent = data.user.full_name || data.user.username;
+      setTimeout(() => {
+        document.getElementById('loginOverlay').style.display = 'none';
+      }, 800);
+    } else {
+      msg.textContent = data.message;
+      msg.style.color = 'red';
+    }
+  } catch (e) {
+    msg.textContent = 'Error koneksi ke server.';
+    msg.style.color = 'red';
+  }
+}
+
+async function doRegister() {
+  const username = document.getElementById('regUser').value;
+  const email = document.getElementById('regEmail').value;
+  const password = document.getElementById('regPass').value;
+  const full_name = document.getElementById('regName').value;
+  const msg = document.getElementById('regMsg');
+  if (!username || !email || !password) { msg.textContent = 'Isi semua field.'; msg.style.color = 'red'; return; }
+  try {
+    const res = await fetch('/api/register', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({username, email, password, full_name}) });
+    const data = await res.json();
+    if (data.status === 'success') {
+      msg.textContent = 'Registrasi berhasil! Silakan login.';
+      msg.style.color = 'green';
+      setTimeout(() => showLogin(), 1500);
+    } else {
+      msg.textContent = data.message;
+      msg.style.color = 'red';
+    }
+  } catch (e) {
+    msg.textContent = 'Error koneksi ke server.';
+    msg.style.color = 'red';
+  }
+}
+
+async function doGoogleLogin() {
+  const email = prompt('Masukkan email Google Anda:');
+  if (!email) return;
+  const msg = document.getElementById('loginMsg');
+  try {
+    const res = await fetch('/api/login/google', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({google_id: 'google_' + email, email: email, full_name: email.split('@')[0]}) });
+    const data = await res.json();
+    if (data.status === 'success') {
+      msg.textContent = 'Login Google berhasil!';
+      msg.style.color = 'green';
+      document.getElementById('avatarName').textContent = data.user.full_name || data.user.username;
+      setTimeout(() => { document.getElementById('loginOverlay').style.display = 'none'; }, 800);
+    } else {
+      msg.textContent = data.message;
+      msg.style.color = 'red';
+    }
+  } catch (e) {
+    msg.textContent = 'Error koneksi.';
+    msg.style.color = 'red';
+  }
+}
+
+async function doCampusLogin() {
+  const email = prompt('Masukkan email kampus Anda:');
+  const campus = prompt('Nama kampus (contoh: UGM, ITB, dll):');
+  if (!email || !campus) return;
+  const msg = document.getElementById('loginMsg');
+  try {
+    const res = await fetch('/api/login/campus', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({sso_id: 'campus_' + email, email: email, full_name: email.split('@')[0], campus_name: campus}) });
+    const data = await res.json();
+    if (data.status === 'success') {
+      msg.textContent = 'Login Kampus berhasil!';
+      msg.style.color = 'green';
+      document.getElementById('avatarName').textContent = data.user.full_name || data.user.username;
+      setTimeout(() => { document.getElementById('loginOverlay').style.display = 'none'; }, 800);
+    } else {
+      msg.textContent = data.message;
+      msg.style.color = 'red';
+    }
+  } catch (e) {
+    msg.textContent = 'Error koneksi.';
+    msg.style.color = 'red';
+  }
+}
+
+async function doLogout() {
+  try {
+    await fetch('/api/logout', { method: 'POST' });
+    document.getElementById('loginOverlay').style.display = 'flex';
+    document.getElementById('loginMsg').textContent = 'Logout berhasil.';
+    document.getElementById('loginMsg').style.color = 'green';
+  } catch (e) {
+    document.getElementById('loginOverlay').style.display = 'flex';
+  }
+}
+
+// Check if already logged in
+fetch('/api/login', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({}) })
+  .then(r => r.json())
+  .then(d => { if (d.status === 'success') { document.getElementById('loginOverlay').style.display = 'none'; document.getElementById('avatarName').textContent = d.user.full_name || d.user.username; } })
+  .catch(() => {});
+</script>
+</body>
+</html>

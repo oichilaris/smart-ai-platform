@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PT Yaskum — Virtual Office Dashboard</title>
+<style>
+:root {
+  --bg: #0a0e27;
+  --card: #141937;
+  --card2: #1a2045;
+  --accent: #00d4ff;
+  --accent2: #a855f7;
+  --text: #e2e8f0;
+  --muted: #94a3b8;
+  --border: #2a3158;
+  --green: #22c55e;
+  --orange: #f97316;
+  --red: #ef4444;
+  --gold: #fbbf24;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+
+/* Sidebar */
+.sidebar {
+  position:fixed; left:0; top:0; width:64px; height:100vh;
+  background:var(--card); border-right:1px solid var(--border);
+  display:flex; flex-direction:column; align-items:center; padding:16px 0; gap:8px; z-index:10;
+}
+.sidebar .logo { width:40px; height:40px; background:linear-gradient(135deg,var(--accent),var(--accent2)); border-radius:10px; display:flex; align-items:center; justify-content:center; font-weight:700; font-size:14px; color:#fff; margin-bottom:8px; cursor:pointer; }
+.sidebar .nav-item { width:40px; height:40px; border-radius:10px; display:flex; align-items:center; justify-content:center; cursor:pointer; color:var(--muted); transition:all 0.2s; font-size:18px; position:relative; }
+.sidebar .nav-item:hover, .sidebar .nav-item.active { background:var(--card2); color:var(--accent); }
+.sidebar .nav-item .tooltip { position:absolute; left:50px; background:var(--card2); padding:4px 8px; border-radius:4px; font-size:11px; white-space:nowrap; opacity:0; pointer-events:none; transition:opacity 0.2s; }
+.sidebar .nav-item:hover .tooltip { opacity:1; }
+
+/* Main */
+.main { margin-left:64px; padding:24px; min-height:100vh; }
+
+/* Header */
+.header { display:flex; justify-content:space-between; align-items:center; margin-bottom:24px; flex-wrap:wrap; gap:12px; }
+.header h1 { font-size:24px; font-weight:700; background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.header .user { display:flex; align-items:center; gap:12px; }
+.header .user .avatar { width:36px; height:36px; border-radius:50%; background:linear-gradient(135deg,var(--accent2),var(--orange)); display:flex; align-items:center; justify-content:center; font-weight:600; font-size:14px; }
+.header .user .info { text-align:right; }
+.header .user .info .name { font-weight:600; font-size:14px; }
+.header .user .info .role { font-size:12px; color:var(--muted); }
+.search-bar { background:var(--card); border:1px solid var(--border); border-radius:10px; padding:10px 16px; width:320px; color:var(--text); font-size:14px; }
+
+/* Grid */
+.grid { display:grid; grid-template-columns:1fr 1.2fr 1fr; gap:20px; }
+
+/* Cards */
+.card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:20px; }
+.card h3 { font-size:14px; font-weight:600; color:var(--muted); text-transform:uppercase; letter-spacing:0.5px; margin-bottom:16px; }
+
+/* Stats */
+.stats-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(200px,1fr)); gap:16px; margin-bottom:24px; }
+.stat-card { background:var(--card); border:1px solid var(--border); border-radius:14px; padding:20px; }
+.stat-card .icon { font-size:24px; margin-bottom:8px; }
+.stat-card .value { font-size:28px; font-weight:700; color:var(--accent); }
+.stat-card .label { font-size:12px; color:var(--muted); margin-top:4px; }
+.stat-card .trend { font-size:11px; margin-top:8px; }
+.stat-card .trend.up { color:var(--green); }
+.stat-card .trend.down { color:var(--red); }
+
+/* Progress */
+.progress-item { margin-bottom:12px; }
+.progress-item .label { display:flex; justify-content:space-between; font-size:13px; margin-bottom:6px; }
+.progress-bar { height:8px; background:var(--card2); border-radius:4px; overflow:hidden; }
+.progress-bar .fill { height:100%; border-radius:4px; transition:width 0.5s; }
+.fill.green { background:var(--green); }
+.fill.purple { background:var(--accent2); }
+.fill.blue { background:var(--accent); }
+.fill.grey { background:var(--muted); }
+
+/* Tool Cards */
+.tool-card { background:var(--card2); border:1px solid var(--border); border-radius:10px; padding:14px; margin-bottom:10px; display:flex; justify-content:space-between; align-items:center; }
+.tool-card .info h4 { font-size:14px; font-weight:600; }
+.tool-card .info p { font-size:12px; color:var(--muted); margin-top:2px; }
+.tool-card .btn { background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; border:none; padding:6px 14px; border-radius:6px; font-size:12px; font-weight:600; cursor:pointer; }
+
+/* Token Card */
+.token-card { background:linear-gradient(135deg,#1e2a5e,#2d1b4e); border:1px solid var(--border); border-radius:14px; padding:20px; }
+.token-card .balance { font-size:32px; font-weight:700; color:var(--accent); }
+.token-card .label { font-size:12px; color:var(--muted); }
+
+/* Activity */
+.activity { display:flex; justify-content:space-between; font-size:13px; padding:8px 0; border-bottom:1px solid var(--border); }
+.activity:last-child { border:none; }
+.activity .pos { color:var(--green); }
+.activity .neg { color:var(--orange); }
+
+/* Jobs */
+.job-item { padding:10px; background:var(--card2); border-radius:8px; margin-bottom:8px; }
+.job-item .title { font-size:13px; font-weight:600; }
+.job-item .company { font-size:12px; color:var(--muted); }
+.job-item .btn { font-size:11px; color:var(--accent); cursor:pointer; margin-top:4px; display:inline-block; }
+
+/* Chart */
+.chart-container { height:120px; display:flex; align-items:flex-end; gap:4px; padding:8px 0; }
+.chart-bar { flex:1; background:var(--accent2); border-radius:4px 4px 0 0; min-height:4px; transition:height 0.3s; }
+.chart-bar.green { background:var(--green); }
+
+/* Donut */
+.donut { width:100px; height:100px; border-radius:50%; background:conic-gradient(var(--accent) 0% 45%, var(--green) 45% 80%, var(--accent2) 80% 95%, var(--orange) 95% 100%); margin:0 auto; }
+.legend { display:flex; flex-wrap:wrap; gap:8px; margin-top:12px; font-size:11px; }
+.legend-item { display:flex; align-items:center; gap:4px; }
+.legend-dot { width:8px; height:8px; border-radius:50%; }
+
+/* Update Item */
+.update-item { padding:8px; background:var(--card2); border-radius:6px; margin-bottom:6px; font-size:12px; }
+.update-item .badge { background:var(--accent); color:#000; padding:2px 6px; border-radius:4px; font-size:10px; font-weight:600; margin-right:6px; }
+
+/* Welcome */
+.welcome { margin-bottom:20px; }
+.welcome h2 { font-size:18px; font-weight:600; }
+.welcome p { font-size:13px; color:var(--muted); margin-top:4px; }
+
+/* Section Title */
+.section-title { font-size:16px; font-weight:600; margin-bottom:16px; }
+
+/* Two Column */
+.two-col { display:grid; grid-template-columns:1fr 1fr; gap:12px; }
+
+/* Login */
+.login-container { display:flex; justify-content:center; align-items:center; min-height:100vh; background:linear-gradient(135deg,#0a0e27,#1a1040); }
+.login-box { background:var(--card); border:1px solid var(--border); border-radius:20px; padding:40px; width:400px; text-align:center; }
+.login-box h2 { font-size:24px; margin-bottom:8px; background:linear-gradient(135deg,var(--accent),var(--accent2)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+.login-box p { color:var(--muted); font-size:14px; margin-bottom:24px; }
+.login-box input { width:100%; padding:12px 16px; background:var(--card2); border:1px solid var(--border); border-radius:10px; color:var(--text); font-size:14px; margin-bottom:12px; }
+.login-box button { width:100%; padding:12px; background:linear-gradient(135deg,var(--accent),var(--accent2)); color:#fff; border:none; border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; margin-top:8px; }
+.login-box .divider { margin:16px 0; color:var(--muted); font-size:12px; }
+.login-box .sso-btn { background:var(--card2); border:1px solid var(--border); color:var(--text); margin-bottom:8px; }
+.back-btn { background:var(--card2); border:1px solid var(--border); color:var(--text); padding:8px 16px; border-radius:8px; cursor:pointer; font-size:13px; margin-bottom:16px; display:inline-block; }
+.back-btn:hover { background:var(--card); }
+
+/* Data Table */
+.data-table { width:100%; border-collapse:collapse; margin-top:12px; }
+.data-table th, .data-table td { padding:10px; text-align:left; border-bottom:1px solid var(--border); font-size:13px; }
+.data-table th { color:var(--muted); font-weight:600; }
+
+/* Responsive */
+@media (max-width:1024px) { .grid { grid-template-columns:1fr; } }
+@media (max-width:768px) { .sidebar { width:48px; } .main { margin-left:48px; padding:16px; } .header h1 { font-size:18px; } .search-bar { width:200px; } .stats-grid { grid-template-columns:repeat(2,1fr); } }
+</style>
+</head>
+<body>
+
+<!-- LOGIN PAGE -->
+<div id="login" class="login-container">
+  <div class="login-box">
+    <h2>PT YASKUM</h2>
+    <p>Virtual Office — Manajemen Properti & Konstruksi</p>
+    <input type="text" id="loginUser" placeholder="Username" />
+    <input type="password" id="loginPass" placeholder="Password" />
+    <button onclick="doLogin()">Masuk ke Dashboard</button>
+    <div id="loginMsg" style="margin-top:8px;font-size:12px;text-align:center;"></div>
+    <div class="divider">— atau login dengan —</div>
+    <button class="sso-btn" onclick="window.location.href='/discord/login'">🎮 Discord</button>
+    <p style="margin-top:16px;font-size:12px;color:var(--muted);">© 2026 PT Yaskum Graha Sleman Properti</p>
+  </div>
+</div>
+
+<!-- DASHBOARD PAGE -->
+<div id="dashboard" style="display:none;">
+  <!-- Sidebar -->
+  <div class="sidebar">
+    <div class="logo" onclick="showPage('login')">YS</div>
+    <div class="nav-item active" onclick="showPage('dashboard')"><span class="tooltip">Dashboard</span>🏠</div>
+    <div class="nav-item" onclick="showPage('tenders')"><span class="tooltip">Tender</span>📋</div>
+    <div class="nav-item" onclick="showPage('projects')"><span class="tooltip">Proyek</span>🏗️</div>
+    <div class="nav-item" onclick="showPage('finance')"><span class="tooltip">Keuangan</span>💰</div>
+    <div class="nav-item" onclick="showPage('clients')"><span class="tooltip">Klien</span>👥</div>
+    <div class="nav-item" onclick="showPage('docs')"><span class="tooltip">Dokumen</span>📁</div>
+    <div class="nav-item" onclick="showPage('reports')"><span class="tooltip">Laporan</span>📊</div>
+    <div class="nav-item" onclick="showPage('settings')"><span class="tooltip">Settings</span>⚙️</div>
+    <div class="nav-item" onclick="showPage('login')"><span class="tooltip">Logout</span>🚪</div>
+  </div>
+
+  <!-- Main Content -->
+  <div class="main">
+    <div class="header">
+      <div>
+        <h1>🏢 PT YASKUM GRAHA SLEMAN</h1>
+        <input class="search-bar" placeholder="Search tenders, projects, clients..." />
+      </div>
+      <div class="user">
+        <div class="info">
+          <div class="name">Auldi Putra H.</div>
+          <div class="role">CEO & Founder</div>
+        </div>
+        <div class="avatar">AP</div>
+      </div>
+    </div>
+
+    <!-- Welcome -->
+    <div class="welcome">
+      <h2>Selamat Datang di Virtual Office</h2>
+      <p>Dashboard manajemen properti, tender LPSE, dan konstruksi di DIY</p>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="icon">📋</div>
+        <div class="value">12</div>
+        <div class="label">Tender Aktif</div>
+        <div class="trend up">↑ +3 minggu ini</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon">🏗️</div>
+        <div class="value">5</div>
+        <div class="label">Proyek Berjalan</div>
+        <div class="trend up">↑ 2 proyek baru</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon">💰</div>
+        <div class="value">Rp 2.4M</div>
+        <div class="label">Value Tender</div>
+        <div class="trend up">↑ +Rp 800jt</div>
+      </div>
+      <div class="stat-card">
+        <div class="icon">⭐</div>
+        <div class="value">4.8</div>
+        <div class="label">Rating Klien</div>
+        <div class="trend up">↑ +0.2 bulan ini</div>
+      </div>
+    </div>
+
+    <!-- Main Grid -->
+    <div class="grid">
+      <!-- Left Column -->
+      <div>
+        <!-- Quick Actions -->
+        <div class="card" style="margin-bottom:20px;">
+          <h3>Aksi Cepat</h3>
+          <div class="tool-card">
+            <div class="info">
+              <h4>📝 Buat SPH Baru</h4>
+              <p>Surat Penawaran Harga</p>
+            </div>
+            <button class="btn">Buka</button>
+          </div>
+          <div class="tool-card">
+            <div class="info">
+              <h4>📊 Generate RAB</h4>
+              <p>Rencana Anggaran Biaya</p>
+            </div>
+            <button class="btn">Buka</button>
+          </div>
+          <div class="tool-card">
+            <div class="info">
+              <h4>🔍 Cari Tender LPSE</h4>
+              <p>Match otomatis DIY region</p>
+            </div>
+            <button class="btn">Cari</button>
+          </div>
+          <div class="tool-card">
+            <div class="info">
+              <h4>📧 Kirim Proposal</h4>
+              <p>Email ke instansi</p>
+            </div>
+            <button class="btn">Kirim</button>
+          </div>
+        </div>
+
+        <!-- Progress -->
+        <div class="card">
+          <h3>Progress Proyek</h3>
+          <div class="progress-item">
+            <div class="label"><span>Greenhouse BTN</span><span>75%</span></div>
+            <div class="progress-bar"><div class="fill blue" style="width:75%"></div></div>
+          </div>
+          <div class="progress-item">
+            <div class="label"><span>Tender LPSE Sleman</span><span>60%</span></div>
+            <div class="progress-bar"><div class="fill purple" style="width:60%"></div></div>
+          </div>
+          <div class="progress-item">
+            <div class="label"><span>Pengecatan Gudang</span><span>90%</span></div>
+            <div class="progress-bar"><div class="fill green" style="width:90%"></div></div>
+          </div>
+          <div class="progress-item">
+            <div class="label"><span>Epoxy Floor Workshop</span><span>45%</span></div>
+            <div class="progress-bar"><div class="fill grey" style="width:45%"></div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Center Column -->
+      <div>
+        <!-- Chart -->
+        <div class="card" style="margin-bottom:20px;">
+          <h3>Revenue Bulanan</h3>
+          <div class="chart-container">
+            <div class="chart-bar" style="height:40%"></div>
+            <div class="chart-bar" style="height:60%"></div>
+            <div class="chart-bar" style="height:45%"></div>
+            <div class="chart-bar" style="height:80%"></div>
+            <div class="chart-bar green" style="height:100%"></div>
+            <div class="chart-bar" style="height:70%"></div>
+            <div class="chart-bar" style="height:55%"></div>
+            <div class="chart-bar" style="height:65%"></div>
+            <div class="chart-bar" style="height:75%"></div>
+            <div class="chart-bar" style="height:90%"></div>
+            <div class="chart-bar" style="height:85%"></div>
+            <div class="chart-bar green" style="height:95%"></div>
+          </div>
+          <div class="legend">
+            <div class="legend-item"><div class="legend-dot" style="background:var(--accent2)"></div>Proyek Regular</div>
+            <div class="legend-item"><div class="legend-dot" style="background:var(--green)"></div>Tender Menang</div>
+          </div>
+        </div>
+
+        <!-- Recent Activity -->
+        <div class="card">
+          <h3>Aktivitas Terbaru</h3>
+          <div class="activity"><span>📋 Tender LPSE Bantul dibuka</span><span class="pos">+Rp 45jt</span></div>
+          <div class="activity"><span>💰 Pembayaran DP diterima</span><span class="pos">+Rp 120jt</span></div>
+          <div class="activity"><span>📝 SPH dikirim ke PT XYZ</span><span class="neg">Pending</span></div>
+          <div class="activity"><span>✅ Sertifikasi ISO diperpanjang</span><span class="pos">Selesai</span></div>
+          <div class="activity"><span>🏗️ Proyek Greenhouse phase 2</span><span class="neg">Started</span></div>
+        </div>
+      </div>
+
+      <!-- Right Column -->
+      <div>
+        <!-- Balance -->
+        <div class="token-card" style="margin-bottom:20px;">
+          <div class="label">Saldo Proyek Aktif</div>
+          <div class="balance">Rp 847jt</div>
+          <div class="label" style="margin-top:8px;">Target Q4 2026: Rp 2.5M</div>
+          <div class="progress-bar" style="margin-top:12px;"><div class="fill blue" style="width:34%"></div></div>
+        </div>
+
+        <!-- Tender Potensial -->
+        <div class="card" style="margin-bottom:20px;">
+          <h3>Tender Potensial</h3>
+          <div class="job-item">
+            <div class="title">🏗️ Renovasi Gedung Dinas PUPR</div>
+            <div class="company">Pemprov DIY • Rp 750jt</div>
+            <div class="btn">Lihat Detail →</div>
+          </div>
+          <div class="job-item">
+            <div class="title">🏠 BTN Housingpreneur Batch 3</div>
+            <div class="company">Kementerian ATR • Open</div>
+            <div class="btn">Daftar Sekarang →</div>
+          </div>
+          <div class="job-item">
+            <div class="title">🔧 Kontraktor Cat Epoxy Gudang</div>
+            <div class="company">PT Indofood • Rp 180jt</div>
+            <div class="btn">Bida Sekarang →</div>
+          </div>
+        </div>
+
+        <!-- Updates -->
+        <div class="card">
+          <h3>Update Sistem</h3>
+          <div class="update-item"><span class="badge">NEW</span> modul SPH generator ready</div>
+          <div class="update-item"><span class="badge">FIX</span> integrasi Discord berhasil</div>
+          <div class="update-item"><span class="badge">UPD</span> database tender LPSE diperbarui</div>
+          <div class="update-item"><span class="badge">SEC</span> backup otomatis aktif</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+// Page Navigation
+function showPage(pageId) {
+  document.getElementById('login').style.display = pageId === 'login' ? 'flex' : 'none';
+  document.getElementById('dashboard').style.display = pageId === 'dashboard' ? 'block' : 'none';
+  window.scrollTo(0,0);
+}
+
+// Login Handler
+async function doLogin() {
+  const username = document.getElementById('loginUser').value;
+  const password = document.getElementById('loginPass').value;
+  const msg = document.getElementById('loginMsg');
+  
+  if (!username || !password) {
+    msg.textContent = 'Isi username dan password.';
+    msg.style.color = 'red';
+    return;
+  }
+  
+  // Demo login - accept any credentials
+  msg.textContent = 'Login berhasil!';
+  msg.style.color = 'green';
+  setTimeout(() => showPage('dashboard'), 800);
+}
+
+// Animate stats on load
+document.querySelectorAll('.stat-card .value').forEach(el => {
+  const final = el.textContent;
+  el.textContent = '0';
+  setTimeout(() => el.textContent = final, 300);
+});
+
+// Chart hover effect
+document.querySelectorAll('.chart-bar').forEach(bar => {
+  bar.addEventListener('mouseenter', function() { this.style.opacity = '0.8'; });
+  bar.addEventListener('mouseleave', function() { this.style.opacity = '1'; });
+});
+
+// Check if already logged in (session)
+window.onload = function() {
+  const session = localStorage.getItem('yaskum_session');
+  if (session) showPage('dashboard');
+};
+</script>
+</body>
+</html>

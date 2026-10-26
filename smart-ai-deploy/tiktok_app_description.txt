@@ -1,0 +1,43 @@
+APH Media is a digital content management platform that helps entrepreneurs and businesses manage their social media presence across multiple platforms including TikTok, Facebook, and Instagram. The platform provides tools for content creation, scheduling, analytics, and automated publishing.
+
+How TikTok Integration Works:
+
+1. Login Kit (OAuth 2.0):
+- Users click "Connect TikTok" button on our platform
+- They are redirected to TikTok's authorization page
+- Users grant permissions for user.info.basic and video.list scopes
+- Upon authorization, we receive an access token and open_id
+- The token is securely stored and used for subsequent API calls
+
+2. Display API:
+- We use the access token to fetch the user's TikTok profile information (display name, avatar, open_id)
+- We retrieve the user's recent videos (title, description, cover image, engagement metrics)
+- This data is displayed in our dashboard for content analytics
+
+3. Content Posting API:
+- Users can upload videos directly from our platform to TikTok
+- We initialize the upload with video metadata (title, privacy level)
+- Video is uploaded in chunks for reliability
+- After upload, we poll for processing status
+- Published videos appear on the user's TikTok profile
+
+User Flow:
+1. User logs into APH Media platform
+2. Navigates to "Social Media" section
+3. Clicks "Connect TikTok" button
+4. Authorizes on TikTok's OAuth page
+5. Returns to dashboard with TikTok profile displayed
+6. Can view their recent TikTok videos and analytics
+7. Can upload new videos directly to TikTok
+
+Scopes Used:
+- user.info.basic: To display user profile (name, avatar)
+- video.list: To display user's recent videos and analytics
+- video.publish: To publish videos to user's TikTok profile
+- video.upload: To upload video content
+
+The website URL is https://auldihasibuan.pythonanywhere.com where users can access the platform. Privacy Policy and Terms of Service are available at /privacy and /terms respectively.
+
+All content published through the platform is created and owned by the user. We do not store or reuse user content beyond the publishing process. Access tokens are encrypted and stored securely.
+
+The platform is designed for business and content creator use, helping them manage multiple social media accounts from a single dashboard. It does not contain adult content or violate TikTok's developer guidelines.

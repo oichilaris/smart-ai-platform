@@ -1,0 +1,26 @@
+# Hermes internal
+.agents/
+.crush/
+.grok/
+.qwen/
+.npm-cache/
+.env
+.env.example
+hermes-home/
+hermes-autonomous/
+obsidian-vault/
+smart-ai-deploy/__pycache__/
+*.pyc
+*.pyo
+node_modules/
+.cache/
+.logs/
+
+# OS
+Thumbs.db
+.DS_Store
+
+# Credentials
+Api key sosmed.txt
+*.key
+*.pem
